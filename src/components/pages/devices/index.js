@@ -5,55 +5,77 @@ import { connect } from "react-redux";
 import ReactLoading from "react-loading";
 import * as deviceAction from "../../../modules/devices/devices.action";
 
-import style from "./style.scss";
+import Button from '@material-ui/core/Button';
+import { makeStyles } from '@material-ui/core/styles';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableContainer from '@material-ui/core/TableContainer';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
+import Paper from '@material-ui/core/Paper';
+import TableSortLabel from '@material-ui/core/TableSortLabel';
+import Link from '@material-ui/core/Link';
+import classes from "./style.less";
 
 const Devices = (props) => {
 
-    const [state, setState] = useState({currentUrl:""});
+    const [timeCount, setTimeCount] = useState(0);
+    const [order, setOrder] = React.useState('asc');
+    const [orderBy, setOrderBy] = React.useState('siteName');
 
     useEffect(()=>{
         props.getDeviceListSaga();   
     }, [])
 
     useEffect(()=>{
-        console.log("devices ---->", props.devices);
-    }, [props.devices])
-
-    const on_click_restart_btn = (e, dataId, index) => {
-        console.log("on_click_restart_btn -> ", dataId, index);
-        e.preventDefault();
-        if(props.reBootDeviceSaga) props.reBootDeviceSaga(dataId, index);
         
+    }, [props.devices]);
+
+    useEffect(()=>{
+        const timeInterval = parseInt(localStorage.getItem("time")||5);
+        setTimeout(() => {
+            if(timeCount > 0){
+                console.log("timeCount -->", timeCount);
+                props.getDeviceListSaga();
+            }
+            setTimeCount(timeCount+1);
+        }, 1000 * 60 * timeInterval);
+    }, [timeCount]);
+
+    const on_click_restart_btn = (e, dataId) => {
+        e.preventDefault();
+        if(props.reBootDeviceSaga) props.reBootDeviceSaga(dataId);
     }
 
-    const renderFrequencyControl = (controlFrequency, overviewFrequency) => {
+    const renderFrequencyControl = (ele) => {
 
-        if(controlFrequency == "rebooting"){
-            return <td className = {style['rebooting']}>REBOOTING</td>
+        if(ele.controlFrequency == "rebooting"){
+            return <TableCell className = {classes.rebooting}>REBOOTING</TableCell>
         }else{
 
-            if(controlFrequency != undefined){
-                if(controlFrequency != overviewFrequency){
-                    return <td className = {style['red-background']}>{controlFrequency}</td>
+            if(ele.controlFrequency != undefined){
+                if(ele.isRed){
+                    return <TableCell className = {classes.redBackground}>{ele.controlFrequency}</TableCell>
                 }else{
-                    return <td className = {style['text-right']}>{controlFrequency}</td>
+                    return <TableCell className = {classes.textRight}>{ele.controlFrequency}</TableCell>
                 }
             }else{
-                return <td className = {style['text-right']}><div className = {`${style["reloading"]}`}><ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} /></div></td>
+                return <TableCell className = {classes.textRight}><div className = {classes.reloading}><ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} /></div></TableCell>
             }
         }
         
     }
 
-    const renderReBootBtn = (identification, overviewFrequency, index) => {
-        const controlFrequency = identification.controlFrequency;
-        if(controlFrequency == "rebooting"){
-            return <div className = {`${style["reloading"]}`}><ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} /></div>
-        }else{
-            // return <button className={`${style["uk-button"]} ${style["uk-button-default"]}`} onClick={(e)=>on_click_restart_btn(e, identification.id, index)}>Reboot</button>
+    const renderReBootBtn = (ele) => {
+        const controlFrequency = ele.controlFrequency;
+        const overviewFrequency = ele.overviewFrequency;
 
+        if(controlFrequency == "rebooting"){
+            return <div className = {classes.reloading}><ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} /></div>
+        }else{
             if(controlFrequency != overviewFrequency && controlFrequency != undefined){
-                return <button className={`${style["uk-button"]} ${style["uk-button-default"]}`} onClick={(e)=>on_click_restart_btn(e, identification.id, index)}>Reboot</button>
+                return <Button variant="outlined" onClick={(e)=>on_click_restart_btn(e, ele.id)}>Reboot</Button>
             }else{
                 return "";
             }
@@ -61,74 +83,152 @@ const Devices = (props) => {
     }
 
     const on_click_obtain_devices = () => {
-
         props.getDeviceListSaga();
-
     }
+
+    const handleRequestSort = (property) => (event) => {
+        const isAsc = orderBy === property && order === 'asc';
+        setOrder(isAsc ? 'desc' : 'asc');
+        setOrderBy(property);
+    };
+
+    const descendingComparator = (a, b, orderBy) => {
+        if (b[orderBy] < a[orderBy]) {
+          return -1;
+        }
+        if (b[orderBy] > a[orderBy]) {
+          return 1;
+        }
+        return 0;
+    }
+
+    const getComparator = (order, orderBy) => {
+        return order === 'desc'
+          ? (a, b) => descendingComparator(a, b, orderBy)
+          : (a, b) => -descendingComparator(a, b, orderBy);
+    }
+
+    const stableSort = (array, comparator) => {
+        const stabilizedThis = array.map((el, index) => [el, index]);
+        stabilizedThis.sort((a, b) => {
+          const order = comparator(a[0], b[0]);
+          if (order !== 0) return order;
+          return a[1] - b[1];
+        });
+        return stabilizedThis.map((el) => el[0]);
+    }
+
+    const on_click_device_name = (deviceId) => (event) => {
+        console.log("deviceId",deviceId);
+        const baseUrl = localStorage.getItem("base-url");
+        const url = `${baseUrl}/nms/devices/airmax/ac/${deviceId}/dashboard`
+        window.open(url, "_blank");
+    }
+
+    // const createSortHandler = (property) => (event) => {
+    //     onRequestSort(event, property);
+    // };
 
 	const render = () => {
         const {devices} = props;
 		return (
-			<div className = {style['device-list-container']}>
-                <button style = {{width:"200px"}}className={`${style["uk-button"]} ${style["uk-button-default"]}`} onClick={on_click_obtain_devices}>Referesh</button>
-                <table className={`${style["uk-table"]} ${style["uk-table-divider"]} ${style["uk-table-middle"]}`} >
-						<thead>
-							<tr>
-								<th>ID</th>
-								<th>Site Name</th>
-								<th>Name</th>
-                                <th>Overview Frequency</th>
-                                <th>Link Score</th>
-                                <th>Control Frequency</th>
-                                <td></td>
-							</tr>
-						</thead>
-						<tbody>
-							{
-								devices.map((ele, index) => {
-                                    const identification =  ele.identification;
-                                    const overview =  ele.overview;
-                                    let linkScore = "";
-                                    try {
-                                        linkScore = overview.linkScore.linkScore;
-                                    } catch (error) {
-                                        console.log(error);
-                                    }
+			<div className = {classes.deviceListContainer}>
+                <div className = {classes.isFetching}>
+                    {props.isFetching && <ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} />}
+                </div>
+                <Button style = {{width:"200px"}} variant="outlined" onClick={on_click_obtain_devices}>Refresh</Button>
+                <TableContainer component={Paper}>
+                <Table className={classes.table} size="small" aria-label="a dense table">
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>
+                                <TableSortLabel
+                                    active={orderBy === "siteName"}
+                                    direction={orderBy === "siteName" ? order : 'asc'}
+                                    onClick={handleRequestSort("siteName")}
+                                    >
+                                    Site Name
+                                </TableSortLabel>
+                            </TableCell>
+                            <TableCell>
+                                <TableSortLabel
+                                    active={orderBy === "name"}
+                                    direction={orderBy === "name" ? order : 'asc'}
+                                    onClick={handleRequestSort("name")}
+                                    >
+                                    Name
+                                </TableSortLabel>
+                            </TableCell>
 
-                                    let frequency = "";
-                                    try {
-                                        frequency = overview.frequency;
-                                    } catch (error) {
-                                        console.log(error);
-                                    }
+                            <TableCell>
+                                <TableSortLabel
+                                    active={orderBy === "overviewStations"}
+                                    direction={orderBy === "overviewStations" ? order : 'asc'}
+                                    onClick={handleRequestSort("overviewStations")}
+                                    >
+                                    Stations
+                                </TableSortLabel>
+                            </TableCell>
 
-                                    const controlFrequency = identification.controlFrequency;
+                            <TableCell align="right">
+                                Overview Frequency
+                            </TableCell>
+                            <TableCell align="right">
+                                <TableSortLabel
+                                    active={orderBy === "linkScore"}
+                                    direction={orderBy === "linkScore" ? order : 'asc'}
+                                    onClick={handleRequestSort("linkScore")}
+                                    >
+                                    Link Score
+                                </TableSortLabel>
+                            </TableCell>
+                            <TableCell align="right">
+                                <TableSortLabel
+                                    active={orderBy === "isRed"}
+                                    direction={orderBy === "isRed" ? order : 'asc'}
+                                    onClick={handleRequestSort("isRed")}
+                                    >
+                                    Control Frequency
+                                </TableSortLabel>
+                            </TableCell>
+                            <TableCell ></TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {
+                            stableSort(devices, getComparator(order, orderBy)).map((ele, index) => {
+                                
+                                const controlFrequency = ele.controlFrequency;
 
-                                    return (
-                                        <tr key={index}>
-                                            <td>{identification.id}</td>
-                                            <td>{identification.site.name}</td>
-                                            <td>{identification.name}</td>
-                                            <td className = {style['text-right']}>{frequency}</td>
-                                            <td className = {style['text-right']} style = {{background:(linkScore>0.8)?"white":"yellow"}}>{linkScore}%</td>
-                                                {renderFrequencyControl(controlFrequency, frequency)}
-                                            <td style = {{textAlign:"center"}}>
-                                                {renderReBootBtn(identification, frequency, index)}
-                                            </td>
-                                        </tr>
-                                    )
-                                })
-							}
-						</tbody>
-					</table>
-			</div>
+                                return (
+                                    <TableRow key={index}>
+                                        <TableCell>{ele.siteName}</TableCell>
+                                        <TableCell>
+                                            <Link component="button" variant="body2" onClick={on_click_device_name(ele.id)}>{ele.name}</Link>
+                                        </TableCell>
+                                        <TableCell align="right">{`${ele.overviewStations} (${ele.disconnectedStations})`}</TableCell>
+                                        <TableCell align="right">{ele.overviewFrequency}</TableCell>
+                                        <TableCell align="right" style = {{background:(ele.linkScore>0.8)?"white":"yellow"}}>{ele.linkScore}%</TableCell>
+                                            {renderFrequencyControl(ele)}
+                                        <TableCell align="right" style = {{textAlign:"center"}}>
+                                            {renderReBootBtn(ele)}
+                                        </TableCell>
+                                    </TableRow>
+                                )
+                            })
+                        }
+                    </TableBody>
+                </Table>
+                </TableContainer>
+               </div>
 		);
 	}
 	return render();
 }
 
 const mapStateToProps = ({ device }) => ({
-	devices:device.devices
+    devices:device.devices,
+    isFetching:device.isFetching
 });
 
 export default connect(

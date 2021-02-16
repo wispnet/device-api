@@ -4,30 +4,34 @@ import api from "../../api";
 const getDeviceList = (state) => state.device.devices;
 
 function* fetchDevices(){
-    console.log("fetchDevices");
+    yield put(actions.setIsFetchingNow(true));
     const devcieList = yield api.device.getDevcieList();
     let arr = [];
     if(devcieList.data){
-        for(var i = 0; i < devcieList.data.length; i++){
+        let length = devcieList.data.length;
+        // length = 2;
+        for(var i = 0; i < length; i++){
             let element = devcieList.data[i];
             if(element.identification.role == "ap"){
                 arr.push(element);
             }
         }
-        yield put(actions.setDeviceList(arr))
+        yield put(actions.fetchDeviceList(arr))
         for(var i = 0; i < arr.length; i++){
             let element = arr[i];
             const deviceConfig = yield api.device.getDeviceControlFrequency(element.identification.id);
+            const stationData = yield api.device.getDistonnectedStations(element.identification.id);
             try{
                 element.identification.controlFrequency = deviceConfig.data.controlFrequency;
-                yield put(actions.setDeviceList(arr))
+                element.identification.stations = stationData.data;
+                yield put(actions.fetchDeviceList(arr))
             }catch(e){
                 console.log(e);
             }
-            // arr.push(element);
         }
-        // yield put(actions.setDeviceList(arr))
+        yield put(actions.setIsFetchingNow(false));
     }
+    
     console.log("devcieList --->", arr);
 }
 
@@ -44,18 +48,26 @@ function* getDeviceControlFrequency(deviceId){
 }
 
 function* reBootDevice(data){
-    const {deviceId, index} = data.payload;
+    const {deviceId} = data.payload;
+    yield put(actions.setIsFetchingNow(true));
     let deviceList = yield select(getDeviceList);
-    console.log(deviceList, deviceId, index);
-    deviceList[index].identification.controlFrequency = "rebooting";
+    let index = 0;
+    for(var i = 0; i < deviceList.length; i ++){
+        if(deviceList[i].id == deviceId){
+            index = i;
+        }
+    }
+    deviceList[index].controlFrequency = "rebooting";
     yield put(actions.setDeviceList(deviceList));
 
     const restartResult = yield api.device.reBootDevice(deviceId);
     if(restartResult.data.result){
         const controlFrequency = yield getDeviceControlFrequency(deviceId);
-        deviceList[index].identification.controlFrequency = controlFrequency;
+        deviceList[index].controlFrequency = controlFrequency;
         yield put(actions.setDeviceList(deviceList));
     }
+
+    yield put(actions.setIsFetchingNow(false));
 }
 
 export function* watchFetchDevices() {
