@@ -16,12 +16,12 @@ module.exports = {
     module: {
       rules: [
         {
-          test: /\.(js|jsx)$/,
+          test: /\.(js|jsx|mjs|ts|tsx)$/,
           exclude: /node_modules/,
           use: {
             loader: "babel-loader",
             options: {
-                presets: ["@babel/react", "@babel/env"]
+              presets: ["@babel/react", "@babel/env"]
             }
           }
         },
@@ -34,21 +34,20 @@ module.exports = {
             ]
         },
         {
-            test: /\.scss|css$/,
-            use: [
-                "style-loader",
-                {
-                    loader: "css-loader",
-                    options: {
-                        modules: {
-                            mode: 'local',
-                            context: path.resolve(__dirname, 'src'),
-                            localIdentName: "[local]--[hash:base64:5]"
-                          }
-                    }
-                },
-                "sass-loader"
-            ]
+          test: /\.less$/,
+          use: [
+            "style-loader",
+            {
+              loader: "css-loader",
+              options: {
+                modules: true,
+                camelCase: "only",
+                importLoaders: 2,
+                localIdentName: "[local]--[hash:base64:5]"
+              }
+            },
+            "less-loader"
+          ]
         },
         {
           test: /\.(eot|woff|woff2|ttf|gif|png|jpe?g|svg|webp|m4v|webm|mp4)$/i,
