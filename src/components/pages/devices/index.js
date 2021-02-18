@@ -59,6 +59,7 @@ const Devices = (props) => {
     const on_click_restart_btn = (e, dataId) => {
         e.preventDefault();
         if(props.reBootDeviceSaga) props.reBootDeviceSaga(dataId);
+        localStorage.setItem(`bRebootEligible[${dataId}]`, false);
     }
 
     const renderFrequencyControl = (ele) => {
