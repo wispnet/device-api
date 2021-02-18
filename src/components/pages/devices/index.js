@@ -33,6 +33,7 @@ const Devices = (props) => {
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('isRed');
     const [openUserSetting, setOpenUserSetting] = React.useState(false);
+    const [toggleDisabled, setDisableToggle] = React.useState(false);
 
     useEffect(()=>{
         props.getDeviceListSaga();   
@@ -145,8 +146,17 @@ const Devices = (props) => {
 		setOpenUserSetting(false);
 	};
 
-    const handleChangeSwitch = () => {
-        console.log("handleChangeSwitch");
+    const handleChangeSwitch = (e) => {
+        console.log("handleChangeSwitch", e.target.checked);
+        const { devices } = props;
+        if(e.target.checked){
+            for(let i = 0; i < devices.length; i++){
+                let element = devices[i];
+                console.log("element --->", element.id);
+                localStorage.setItem(`bRebootEligible[${element.id}]`, true);
+            }
+        }
+        setDisableToggle(true);
     }
 
 	const render = () => {
@@ -160,7 +170,7 @@ const Devices = (props) => {
                             {props.isFetching && <ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} />}
                         </div>
                         <FormControlLabel
-                            control={<CustomSwitch onChange={handleChangeSwitch} name="reboot_dfs" />}
+                            control={<CustomSwitch disabled = {toggleDisabled}  onChange={handleChangeSwitch} name="reboot_dfs" />}
                             label="Roboot DFS hits"
                         />
                     </div>
