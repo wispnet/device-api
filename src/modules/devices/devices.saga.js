@@ -13,6 +13,7 @@ function* fetchDevices(){
         for(var i = 0; i < length; i++){
             let element = devcieList.data[i];
             if(element.identification.role == "ap"){
+                localStorage.setItem(`bRebootEligible[${element.identification.id}]`, false);
                 arr.push(element);
             }
         }

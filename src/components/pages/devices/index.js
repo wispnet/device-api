@@ -15,14 +15,24 @@ import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Paper from '@material-ui/core/Paper';
 import TableSortLabel from '@material-ui/core/TableSortLabel';
+import FormControlLabel  from '@material-ui/core/FormControlLabel';
+import Grid from '@material-ui/core/Grid';
 import Link from '@material-ui/core/Link';
+import SettingsIcon from '@material-ui/icons/Settings';
+
+import moment from 'moment';
+import UserSettingDialog from '../../userSetting';
+import CustomSwitch from '../../Switch';
 import classes from "./style.less";
+
+
 
 const Devices = (props) => {
 
     const [timeCount, setTimeCount] = useState(0);
-    const [order, setOrder] = React.useState('asc');
-    const [orderBy, setOrderBy] = React.useState('siteName');
+    const [order, setOrder] = React.useState('desc');
+    const [orderBy, setOrderBy] = React.useState('isRed');
+    const [openUserSetting, setOpenUserSetting] = React.useState(false);
 
     useEffect(()=>{
         props.getDeviceListSaga();   
@@ -35,11 +45,13 @@ const Devices = (props) => {
     useEffect(()=>{
         const timeInterval = parseInt(localStorage.getItem("time")||5);
         setTimeout(() => {
+            const date = moment().format('L hh:mm:ss');
+            localStorage.setItem("dtLastCheck",date);
             if(timeCount > 0){
                 console.log("timeCount -->", timeCount);
                 props.getDeviceListSaga();
             }
-            setTimeCount(timeCount+1);
+            setTimeCount(timeCount + 1);
         }, 1000 * 60 * timeInterval);
     }, [timeCount]);
 
@@ -125,18 +137,50 @@ const Devices = (props) => {
         window.open(url, "_blank");
     }
 
-    // const createSortHandler = (property) => (event) => {
-    //     onRequestSort(event, property);
-    // };
+    const on_click_setting_btn = () => {
+		setOpenUserSetting(true);
+	}
+
+    const handleClose = () => {
+		setOpenUserSetting(false);
+	};
+
+    const handleChangeSwitch = () => {
+        console.log("handleChangeSwitch");
+    }
 
 	const render = () => {
         const {devices} = props;
+        const lastCheckedTimeStamp = localStorage.getItem("dtLastCheck") || "";
 		return (
 			<div className = {classes.deviceListContainer}>
-                <div className = {classes.isFetching}>
-                    {props.isFetching && <ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} />}
+                <div className = {classes.header}>
+                    <div className = {classes.leftSide}>
+                        <div className = {classes.isFetching}>
+                            {props.isFetching && <ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} />}
+                        </div>
+                        <FormControlLabel
+                            control={<CustomSwitch onChange={handleChangeSwitch} name="reboot_dfs" />}
+                            label="Roboot DFS hits"
+                        />
+                    </div>
+                    <div className = {classes.rightSide}>
+                        <Grid container spacing={8}>
+                            <Grid item style = {{textAlign:"right"}}>
+                                <Button className = {classes.refreshBtn} variant="outlined" onClick={on_click_obtain_devices}>Refresh</Button>
+                                <div className = {classes.lastCheckLbl}>
+                                    <span>
+                                    Last refresh {lastCheckedTimeStamp}
+                                    </span>
+                                </div>
+                            </Grid>
+                            <Grid item>
+                                <Button variant="outlined" onClick={on_click_setting_btn} className = {classes.settingBtn}><SettingsIcon/></Button>
+                            </Grid>
+                        </Grid>
+                    </div>
                 </div>
-                <Button style = {{width:"200px"}} variant="outlined" onClick={on_click_obtain_devices}>Refresh</Button>
+
                 <TableContainer component={Paper}>
                 <Table className={classes.table} size="small" aria-label="a dense table">
                     <TableHead>
@@ -220,6 +264,7 @@ const Devices = (props) => {
                     </TableBody>
                 </Table>
                 </TableContainer>
+                <UserSettingDialog handleClose = {handleClose} open = {openUserSetting}/>
                </div>
 		);
 	}
