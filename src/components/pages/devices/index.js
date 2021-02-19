@@ -34,12 +34,40 @@ const Devices = (props) => {
     const [orderBy, setOrderBy] = React.useState('isRed');
     const [openUserSetting, setOpenUserSetting] = React.useState(false);
     const [toggleDisabled, setDisableToggle] = React.useState(false);
+    const [rebootDfs, setRebootDfs] = React.useState(false);
 
     useEffect(()=>{
         props.getDeviceListSaga();   
+        // const date = moment().format();
+        const date = "02/19/2021 04:37:23";
+        console.log("moment ---->",  moment(date).format("H:mm"));
+
     }, [])
 
     useEffect(()=>{
+        let rbtDeviceCnt = 0;
+        for(let i = 0; i < props.devices.length; i++){
+            const ele = props.devices[i];
+            const controlFrequency = ele.controlFrequency;
+            const overviewFrequency = ele.overviewFrequency;
+            if(controlFrequency != "rebooting"){
+                if(controlFrequency != overviewFrequency && controlFrequency != undefined){
+                    rbtDeviceCnt ++;
+                    localStorage.setItem(`bRebootEligible[${ele.id}]`, true);
+
+                    // if(props.reBootDeviceSaga) props.reBootDeviceSaga(ele.id);
+                    // localStorage.setItem(`bRebootEligible[${ele.id}]`, false);
+
+                }else{
+                    localStorage.setItem(`bRebootEligible[${ele.id}]`, false);
+                }
+            }
+        }
+
+        if(rbtDeviceCnt == 0){
+            setDisableToggle(false);
+            setDisableToggle(false);
+        }
         
     }, [props.devices]);
 
@@ -47,10 +75,10 @@ const Devices = (props) => {
         const timeInterval = parseInt(localStorage.getItem("time")||5);
         setTimeout(() => {
             const date = moment().format('L hh:mm:ss');
-            localStorage.setItem("dtLastCheck",date);
+            localStorage.setItem("dtLastCheck", date);
             if(timeCount > 0){
-                console.log("timeCount -->", timeCount);
                 props.getDeviceListSaga();
+                autoRebootTimeCheck();
             }
             setTimeCount(timeCount + 1);
         }, 1000 * 60 * timeInterval);
@@ -60,6 +88,19 @@ const Devices = (props) => {
         e.preventDefault();
         if(props.reBootDeviceSaga) props.reBootDeviceSaga(dataId);
         localStorage.setItem(`bRebootEligible[${dataId}]`, false);
+    }
+
+    const autoRebootTimeCheck = () => {
+        const bAutoReboot = localStorage.getItem("bAutoReboot") || false;
+        let dtLastCheck = localStorage.getItem("dtLastCheck");
+        if(bAutoReboot === "true" && dtLastCheck){
+            const tAutoRebootTime = localStorage.getItem("tAutoRebootTime")||"00:00";
+            const currentTime = moment().format("H:mm");
+            dtLastCheck = moment(dtLastCheck).format("H:mm");
+            if(getMinutesFromTime(dtLastCheck) < getMinutesFromTime(tAutoRebootTime) && getMinutesFromTime(currentTime) > getMinutesFromTime(tAutoRebootTime)){
+                setRebootDfs(true);
+            }
+        }
     }
 
     const renderFrequencyControl = (ele) => {
@@ -157,6 +198,7 @@ const Devices = (props) => {
                 localStorage.setItem(`bRebootEligible[${element.id}]`, true);
             }
         }
+        setRebootDfs(e.target.checked);
         setDisableToggle(true);
     }
 
@@ -171,7 +213,7 @@ const Devices = (props) => {
                             {props.isFetching && <ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} />}
                         </div>
                         <FormControlLabel
-                            control={<CustomSwitch disabled = {toggleDisabled}  onChange={handleChangeSwitch} name="reboot_dfs" />}
+                            control={<CustomSwitch disabled = {toggleDisabled} checked = {rebootDfs}  onChange={handleChangeSwitch} name="reboot_dfs" />}
                             label="Roboot DFS hits"
                         />
                     </div>

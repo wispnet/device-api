@@ -1,6 +1,8 @@
 import * as actions from "./devices.action";
 import { takeEvery, put, select, call, all, take, wait, delay } from "redux-saga/effects";
 import api from "../../api";
+import { getMinutesFromTime } from '../../utils';
+
 const getDeviceList = (state) => state.device.devices;
 
 function* fetchDevices(){
@@ -71,8 +73,22 @@ function* reBootDevice(data){
     yield put(actions.setIsFetchingNow(false));
 }
 
+function* autoRebootTimeCheck(){
+    // const bAutoReboot = localStorage.getItem("bAutoReboot") || false;
+    // let dtLastCheck = localStorage.getItem("dtLastCheck");
+    // if(bAutoReboot === "true" && dtLastCheck){
+    //     const tAutoRebootTime = localStorage.getItem("tAutoRebootTime")||"00:00";
+    //     const currentTime = moment().format("H:mm");
+    //     dtLastCheck = moment(dtLastCheck).format("H:mm");
+    //     if(getMinutesFromTime(dtLastCheck) < getMinutesFromTime(tAutoRebootTime) && getMinutesFromTime(currentTime) > getMinutesFromTime(tAutoRebootTime)){
+
+    //     }
+    // }
+}
+
 export function* watchFetchDevices() {
     // yield fork(loginWatcherSaga);
     yield takeEvery(actions.getDeviceListSaga, fetchDevices);
     yield takeEvery(actions.reBootDeviceSaga, reBootDevice);
+    yield takeEvery(actions.autoRebootTimeCheck, autoRebootTimeCheck);
 }
