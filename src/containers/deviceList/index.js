@@ -1,9 +1,6 @@
 import React , { Component, useState, useEffect } from 'react';
 import { connect } from "react-redux";
-// import * as blockchainAction from '../modules/blockchain/blockchain.action';
-
 import ReactLoading from "react-loading";
-import * as deviceAction from "../../../modules/devices/devices.action";
 
 import Button from '@material-ui/core/Button';
 import { makeStyles } from '@material-ui/core/styles';
@@ -21,86 +18,27 @@ import Link from '@material-ui/core/Link';
 import SettingsIcon from '@material-ui/icons/Settings';
 
 import moment from 'moment';
-import UserSettingDialog from '../../userSetting';
-import CustomSwitch from '../../Switch';
+
+import UserSettingDialog from '../../components/userSetting';
+import CustomSwitch from '../../components/Switch';
+import useDevice from '../../modules/devices/devices.hook';
 import classes from "./style.less";
 
+const DeviceList = () => {
+    const { devices, isFetching, rebootDfs, toggleDisabled, getDeviceListSaga, reBootDeviceSaga, setRebootDfs, setDisableToggle } = useDevice();
 
-
-const Devices = (props) => {
-
-    const [timeCount, setTimeCount] = useState(0);
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('isRed');
     const [openUserSetting, setOpenUserSetting] = React.useState(false);
-    const [toggleDisabled, setDisableToggle] = React.useState(false);
-    const [rebootDfs, setRebootDfs] = React.useState(false);
 
     useEffect(()=>{
-        props.getDeviceListSaga();   
-        // const date = moment().format();
-        const date = "02/19/2021 04:37:23";
-        console.log("moment ---->",  moment(date).format("H:mm"));
-
+        getDeviceListSaga();
     }, [])
-
-    useEffect(()=>{
-        let rbtDeviceCnt = 0;
-        for(let i = 0; i < props.devices.length; i++){
-            const ele = props.devices[i];
-            const controlFrequency = ele.controlFrequency;
-            const overviewFrequency = ele.overviewFrequency;
-            if(controlFrequency != "rebooting"){
-                if(controlFrequency != overviewFrequency && controlFrequency != undefined){
-                    rbtDeviceCnt ++;
-                    localStorage.setItem(`bRebootEligible[${ele.id}]`, true);
-
-                    // if(props.reBootDeviceSaga) props.reBootDeviceSaga(ele.id);
-                    // localStorage.setItem(`bRebootEligible[${ele.id}]`, false);
-
-                }else{
-                    localStorage.setItem(`bRebootEligible[${ele.id}]`, false);
-                }
-            }
-        }
-
-        if(rbtDeviceCnt == 0){
-            setDisableToggle(false);
-            setDisableToggle(false);
-        }
-        
-    }, [props.devices]);
-
-    useEffect(()=>{
-        const timeInterval = parseInt(localStorage.getItem("time")||5);
-        setTimeout(() => {
-            const date = moment().format('L hh:mm:ss');
-            localStorage.setItem("dtLastCheck", date);
-            if(timeCount > 0){
-                props.getDeviceListSaga();
-                autoRebootTimeCheck();
-            }
-            setTimeCount(timeCount + 1);
-        }, 1000 * 60 * timeInterval);
-    }, [timeCount]);
 
     const on_click_restart_btn = (e, dataId) => {
         e.preventDefault();
-        if(props.reBootDeviceSaga) props.reBootDeviceSaga(dataId);
+        reBootDeviceSaga(dataId);
         localStorage.setItem(`bRebootEligible[${dataId}]`, false);
-    }
-
-    const autoRebootTimeCheck = () => {
-        const bAutoReboot = localStorage.getItem("bAutoReboot") || false;
-        let dtLastCheck = localStorage.getItem("dtLastCheck");
-        if(bAutoReboot === "true" && dtLastCheck){
-            const tAutoRebootTime = localStorage.getItem("tAutoRebootTime")||"00:00";
-            const currentTime = moment().format("H:mm");
-            dtLastCheck = moment(dtLastCheck).format("H:mm");
-            if(getMinutesFromTime(dtLastCheck) < getMinutesFromTime(tAutoRebootTime) && getMinutesFromTime(currentTime) > getMinutesFromTime(tAutoRebootTime)){
-                setRebootDfs(true);
-            }
-        }
     }
 
     const renderFrequencyControl = (ele) => {
@@ -138,7 +76,7 @@ const Devices = (props) => {
     }
 
     const on_click_obtain_devices = () => {
-        props.getDeviceListSaga();
+        getDeviceListSaga();
     }
 
     const handleRequestSort = (property) => (event) => {
@@ -189,12 +127,9 @@ const Devices = (props) => {
 	};
 
     const handleChangeSwitch = (e) => {
-        console.log("handleChangeSwitch", e.target.checked);
-        const { devices } = props;
         if(e.target.checked){
             for(let i = 0; i < devices.length; i++){
                 let element = devices[i];
-                console.log("element --->", element.id);
                 localStorage.setItem(`bRebootEligible[${element.id}]`, true);
             }
         }
@@ -203,14 +138,13 @@ const Devices = (props) => {
     }
 
 	const render = () => {
-        const {devices} = props;
         const lastCheckedTimeStamp = localStorage.getItem("dtLastCheck") || "";
 		return (
 			<div className = {classes.deviceListContainer}>
                 <div className = {classes.header}>
                     <div className = {classes.leftSide}>
                         <div className = {classes.isFetching}>
-                            {props.isFetching && <ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} />}
+                            {isFetching && <ReactLoading type="spinningBubbles" color="#fff" width={32} height={32} color = {"grey"} />}
                         </div>
                         <FormControlLabel
                             control={<CustomSwitch disabled = {toggleDisabled} checked = {rebootDfs}  onChange={handleChangeSwitch} name="reboot_dfs" />}
@@ -324,12 +258,4 @@ const Devices = (props) => {
 	return render();
 }
 
-const mapStateToProps = ({ device }) => ({
-    devices:device.devices,
-    isFetching:device.isFetching
-});
-
-export default connect(
-	mapStateToProps,
-	{...deviceAction}
-)(Devices);
+export default DeviceList;

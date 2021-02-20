@@ -3,9 +3,9 @@ import { connect } from "react-redux";
 import classes from "./style.less";
 import Button from '@material-ui/core/Button';
 import SettingsIcon from '@material-ui/icons/Settings';
-import UserSettingDialog from '../../userSetting';
+import UserSettingDialog from '../../components/userSetting';
 
-import history from "../../../modules/history";
+import history from "../../modules/history";
 
 const Home = (props) => {
 	

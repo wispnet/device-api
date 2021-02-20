@@ -3,7 +3,9 @@ import * as actions from "./devices.action";
 
 const initialState = {
     devices: [],
-    isFetching:false
+    isFetching:false,
+    rebootDfs:false,
+    toggleDisabled:false
 };
 
 const reducer = {
@@ -68,6 +70,20 @@ const reducer = {
         return {
             ...state,
             isFetching
+        }
+    },
+    [actions.setRebootDfs]: (state, data) => {
+        let rebootDfs = data.flag;
+        return {
+            ...state,
+            rebootDfs
+        }
+    },
+    [actions.setDisableToggle]: (state, data) => {
+        let toggleDisabled = data.flag;
+        return {
+            ...state,
+            toggleDisabled
         }
     }
 };
