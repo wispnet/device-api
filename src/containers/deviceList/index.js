@@ -25,7 +25,7 @@ import useDevice from '../../modules/devices/devices.hook';
 import classes from "./style.less";
 
 const DeviceList = () => {
-    const { devices, isFetching, rebootDfs, toggleDisabled, getDeviceListSaga, reBootDeviceSaga, setRebootDfs, setDisableToggle } = useDevice();
+    const { devices, isFetching, rebootDfs, toggleDisabled, dtLastCheck, getDeviceListSaga, reBootDeviceSaga, setRebootDfs, setDisableToggle } = useDevice();
 
     const [order, setOrder] = React.useState('desc');
     const [orderBy, setOrderBy] = React.useState('isRed');
@@ -138,7 +138,6 @@ const DeviceList = () => {
     }
 
 	const render = () => {
-        const lastCheckedTimeStamp = localStorage.getItem("dtLastCheck") || "";
 		return (
 			<div className = {classes.deviceListContainer}>
                 <div className = {classes.header}>
@@ -157,7 +156,7 @@ const DeviceList = () => {
                                 <Button className = {classes.refreshBtn} variant="outlined" onClick={on_click_obtain_devices}>Refresh</Button>
                                 <div className = {classes.lastCheckLbl}>
                                     <span>
-                                    Last refresh {lastCheckedTimeStamp}
+                                    Last refresh {dtLastCheck}
                                     </span>
                                 </div>
                             </Grid>

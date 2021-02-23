@@ -4,22 +4,19 @@ import useDevice from '../../modules/devices/devices.hook';
 import { getMinutesFromTime } from '../../utils';
 
 const Timer = () => {
-    const { devices, rebootDfs,  getDeviceListSaga, setRebootDfs, reBootDeviceSaga, setDisableToggle } = useDevice();
+    const { devices, rebootDfs, dtLastCheck, getDeviceListSaga, setRebootDfs, reBootDeviceSaga, setDisableToggle, setDtLastCheck } = useDevice();
 
-    const autoRebootTimeCheck = () => {
-
+    
+    const autoRebootTimeCheck = (lastCheckDate) => {
+        console.log("dtLastCheck =======>", lastCheckDate);
         const bAutoReboot = localStorage.getItem("bAutoReboot") || false;
-        let dtLastCheck = localStorage.getItem("dtLastCheck");
-
-        if(bAutoReboot === "true" && dtLastCheck){
-
+        if(bAutoReboot === "true" && lastCheckDate){
             const tAutoRebootTime = localStorage.getItem("tAutoRebootTime")||"00:00";
             const currentTime = moment().format("H:mm");
-            dtLastCheck = moment(dtLastCheck).format("H:mm");
-
-            if(getMinutesFromTime(dtLastCheck) < getMinutesFromTime(tAutoRebootTime) && getMinutesFromTime(currentTime) >= getMinutesFromTime(tAutoRebootTime)){
-                setRebootDfs(true);                
-            }
+            lastCheckDate = moment(lastCheckDate).format("H:mm");
+            // if(getMinutesFromTime(lastCheckDate) < getMinutesFromTime(tAutoRebootTime) && getMinutesFromTime(currentTime) >= getMinutesFromTime(tAutoRebootTime)){
+                setRebootDfs(true);
+            // }
         }
     }
 
@@ -44,22 +41,28 @@ const Timer = () => {
 
     useEffect(()=>{
         let rbtDeviceCnt = 0;
+        let checkedDevicesCnt = 0;
         for(let i = 0; i < devices.length; i++){
             const ele = devices[i];
             const controlFrequency = ele.controlFrequency;
             const overviewFrequency = ele.overviewFrequency;
             if(controlFrequency != "rebooting"){
-                if(controlFrequency != overviewFrequency && controlFrequency != undefined){
-                    rbtDeviceCnt ++;
-                    localStorage.setItem(`bRebootEligible[${ele.id}]`, true);
-                }else{
-                    localStorage.setItem(`bRebootEligible[${ele.id}]`, false);
+                if(controlFrequency != undefined){
+                    if(controlFrequency != overviewFrequency){
+                        rbtDeviceCnt ++;
+                        localStorage.setItem(`bRebootEligible[${ele.id}]`, true);
+                    }else{
+                        localStorage.setItem(`bRebootEligible[${ele.id}]`, false);
+                    }
+                    checkedDevicesCnt ++;
                 }
             }
         }
-        if(rbtDeviceCnt == 0){
-            setDisableToggle(false);
-            setRebootDfs(false);
+        if(checkedDevicesCnt == devices.length){
+            if(rbtDeviceCnt == 0){
+                setDisableToggle(false);
+                setRebootDfs(false);
+            }
         }
     }, [devices]);
 
@@ -68,11 +71,11 @@ const Timer = () => {
         const timer = setInterval(() => {
             getDeviceListSaga();
             const date = moment().format('L hh:mm:ss');
-            localStorage.setItem("dtLastCheck", date);
-
-            autoRebootTimeCheck();
+            setDtLastCheck(date);
+            autoRebootTimeCheck(date);
             
         }, 1000 * 60 * timeInterval);
+        // }, 1000 * 5);
         return () => {
             if (timer) clearInterval(timer);
         };

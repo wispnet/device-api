@@ -5,7 +5,9 @@ const initialState = {
     devices: [],
     isFetching:false,
     rebootDfs:false,
-    toggleDisabled:false
+    toggleDisabled:false,
+    dtLastCheck:localStorage.getItem("dtLastCheck"),
+    bAutoReboot:localStorage.getItem("bAutoReboot") || false
 };
 
 const reducer = {
@@ -84,6 +86,22 @@ const reducer = {
         return {
             ...state,
             toggleDisabled
+        }
+    },
+    [actions.setDtLastCheck]: (state, data) => {
+        let dtLastCheck = data.dtLastCheck;
+        localStorage.setItem("dtLastCheck", dtLastCheck);
+        return {
+            ...state,
+            dtLastCheck
+        }
+    },
+    [actions.setBAutoReboot]: (state, data) => {
+        let bAutoReboot = data.bAutoReboot;
+        localStorage.setItem("bAutoReboot", bAutoReboot);
+        return {
+            ...state,
+            bAutoReboot
         }
     }
 };

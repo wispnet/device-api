@@ -23,10 +23,10 @@ function* fetchDevices(){
         for(var i = 0; i < arr.length; i++){
             let element = arr[i];
             const deviceConfig = yield api.device.getDeviceControlFrequency(element.identification.id);
-            const stationData = yield api.device.getDistonnectedStations(element.identification.id);
+            // const stationData = yield api.device.getDistonnectedStations(element.identification.id);
             try{
                 element.identification.controlFrequency = deviceConfig.data.controlFrequency;
-                element.identification.stations = stationData.data;
+                // element.identification.stations = stationData.data;
                 yield put(actions.fetchDeviceList(arr))
             }catch(e){
                 console.log(e);

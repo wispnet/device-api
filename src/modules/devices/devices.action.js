@@ -7,3 +7,5 @@ export const reBootDeviceSaga = createAction("reboot device", (deviceId)=>({devi
 export const autoRebootTimeCheck = createAction("autoRebootTimeCheck");
 export const setRebootDfs = createAction("setRebootDfs", (flag) => ({flag}));
 export const setDisableToggle = createAction("setDisableToggle", (flag) => ({flag}));
+export const setDtLastCheck = createAction("setDtLastCheck", (dtLastCheck) => ({dtLastCheck}));
+export const setBAutoReboot = createAction("setBAutoReboot", (bAutoReboot) => ({bAutoReboot}));

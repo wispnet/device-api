@@ -29,6 +29,7 @@ const UserSettingDialog = ({ open, handleClose }) => {
     const tAutoRebootTime = localStorage.getItem("tAutoRebootTime")||"00:00";
 
     const onClose = () => {
+        console.log("---- onClosse ----");
         const url = baseURLRef.current.value;
 		const correctUrl= /^(ftp|http|https):\/\/[^ "]+$/.test(url);
 		if(correctUrl){
@@ -85,7 +86,7 @@ const UserSettingDialog = ({ open, handleClose }) => {
                 </div>
             </DialogContent>
             <DialogActions>
-                <Button onClick={handleClose} color="primary">
+                <Button onClick={onClose} color="primary">
                     Save
                 </Button>
             </DialogActions>

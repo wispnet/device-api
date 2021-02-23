@@ -7,7 +7,7 @@ const useDevice = () => {
 	const deviceReducer = useSelector((state) => {
 		return state.device;
 	});
-    const {devices, isFetching, rebootDfs, toggleDisabled } = deviceReducer;
+    const {devices, isFetching, rebootDfs, toggleDisabled, dtLastCheck } = deviceReducer;
 
     const getDeviceListSaga = useCallback(() => {
 		dispatch(actions.getDeviceListSaga());
@@ -25,7 +25,11 @@ const useDevice = () => {
 		dispatch(actions.setDisableToggle(flag));
 	}, [dispatch]);
 
-    return { devices, isFetching, rebootDfs, toggleDisabled,  getDeviceListSaga, reBootDeviceSaga, setRebootDfs, setDisableToggle }
+    const setDtLastCheck = useCallback((dtLastCheck) => {
+		dispatch(actions.setDtLastCheck(dtLastCheck));
+	}, [dispatch]);
+
+    return { devices, isFetching, rebootDfs, toggleDisabled, dtLastCheck, setDtLastCheck, getDeviceListSaga, reBootDeviceSaga, setRebootDfs, setDisableToggle }
 }
 
 export default useDevice;
