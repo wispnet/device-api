@@ -14,9 +14,9 @@ const Timer = () => {
             const tAutoRebootTime = localStorage.getItem("tAutoRebootTime")||"00:00";
             const currentTime = moment().format("H:mm");
             lastCheckDate = moment(lastCheckDate).format("H:mm");
-            // if(getMinutesFromTime(lastCheckDate) < getMinutesFromTime(tAutoRebootTime) && getMinutesFromTime(currentTime) >= getMinutesFromTime(tAutoRebootTime)){
+            if(getMinutesFromTime(lastCheckDate) < getMinutesFromTime(tAutoRebootTime) && getMinutesFromTime(currentTime) >= getMinutesFromTime(tAutoRebootTime)){
                 setRebootDfs(true);
-            // }
+            }
         }
     }
 
