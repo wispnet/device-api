@@ -42,10 +42,10 @@ const reducer = {
             let disconnectedStations = 0;
             try{
                 overviewStations =  overview.stationsCount;
-                identification.stations.forEach(element => {
-                    console.log("element.deviceIdentification.status --->", element.deviceIdentification.status);
-                    if(element.deviceIdentification.status == "disconnected") disconnectedStations++;
-                });
+                // identification.stations.forEach(element => {
+                //     console.log("element.deviceIdentification.status --->", element.deviceIdentification.status);
+                //     if(element.deviceIdentification.status == "disconnected") disconnectedStations++;
+                // });
             }catch(e){
                 console.log(e);
             }

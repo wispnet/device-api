@@ -7,15 +7,14 @@ const Timer = () => {
     const { devices, rebootDfs, dtLastCheck, getDeviceListSaga, setRebootDfs, reBootDeviceSaga, setDisableToggle, setDtLastCheck } = useDevice();
 
     
-    const autoRebootTimeCheck = (lastCheckDate) => {
-        console.log("dtLastCheck =======>", lastCheckDate);
-        const bAutoReboot = localStorage.getItem("bAutoReboot") || false;
-        if(bAutoReboot === "true" && lastCheckDate){
+    const autoRebootTimeCheck = () => {
+        const bAutoReboot = localStorage.getItem("bAutoReboot");
+        if(bAutoReboot === "true"){
             const tAutoRebootTime = localStorage.getItem("tAutoRebootTime")||"00:00";
             const currentTime = moment().format("H:mm");
-            lastCheckDate = moment(lastCheckDate).format("H:mm");
-            if(getMinutesFromTime(lastCheckDate) < getMinutesFromTime(tAutoRebootTime) && getMinutesFromTime(currentTime) >= getMinutesFromTime(tAutoRebootTime)){
+            if(getMinutesFromTime(currentTime) == getMinutesFromTime(tAutoRebootTime)){
                 setRebootDfs(true);
+                setDisableToggle(true);
             }
         }
     }
@@ -23,17 +22,11 @@ const Timer = () => {
     useEffect(()=>{
         if(rebootDfs){
             //reboot devices
-            let rbtDeviceCnt = 0;
             for(let i = 0; i < devices.length; i++){
                 const ele = devices[i];
-                const controlFrequency = ele.controlFrequency;
-                const overviewFrequency = ele.overviewFrequency;
-                if(controlFrequency != "rebooting"){
-                    if(controlFrequency != overviewFrequency && controlFrequency != undefined){
-                        rbtDeviceCnt ++;                        
-                        reBootDeviceSaga(ele.id);
-                    }
-                    localStorage.setItem(`bRebootEligible[${ele.id}]`, false);
+                const bRebootEligible = localStorage.getItem(`bRebootEligible[${ele.id}]`);
+                if(bRebootEligible == "true"){
+                    reBootDeviceSaga(ele.id);
                 }
             }
         }
@@ -72,7 +65,6 @@ const Timer = () => {
             getDeviceListSaga();
             const date = moment().format('L hh:mm:ss');
             setDtLastCheck(date);
-            autoRebootTimeCheck(date);
             
         }, 1000 * 60 * timeInterval);
         // }, 1000 * 5);
@@ -80,6 +72,16 @@ const Timer = () => {
             if (timer) clearInterval(timer);
         };
     }, []);
+
+    useEffect(()=>{
+        const timer = setInterval(() => {
+            console.log("autoRebootTimeCheck --->");
+            autoRebootTimeCheck();
+        }, 1000 * 60);
+        return () => {
+            if (timer) clearInterval(timer);
+        };
+    }, [])
 
     return null;
 }
